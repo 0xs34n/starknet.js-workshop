@@ -31,7 +31,7 @@ const compiledErc20 = json.parse(
 // Therefore a Account - Contract interface is needed.
 
 // Generate public and private key pair.
-const keyPair = ec.genKeyPair();
+const starkKeyPair = ec.genKeyPair();
 const starkKeyPub = ec.getStarkKey(keyPair);
 
 // Deploy the Account contract and wait for it to be verified on StarkNet.
@@ -79,7 +79,7 @@ console.log("Waiting for Tx to be Accepted on Starknet - ERC20 Deployment...");
 await defaultProvider.waitForTransaction(erc20TxHash);
 
 // Get the erc20 contract address
-const erc20Address = erc20AddressLocal;
+const erc20Address = erc20Response.address;
 
 // Create a new erc20 contract object
 const erc20 = new Contract(compiledErc20.abi, erc20Address);
@@ -96,8 +96,6 @@ const { transaction_hash: mintTxHash } = await erc20.invoke("mint", {
 // Wait for the invoke transaction to be accepted on StarkNet
 console.log(`Waiting for Tx to be Accepted on Starknet - Minting...`);
 await defaultProvider.waitForTransaction(mintTxHash);
-
-const readNonce = await accountContract.call("get_nonce").nonce;
 
 // Check balance - should be 1000
 console.log(`Calling StarkNet for accountContract balance...`);
@@ -130,7 +128,7 @@ const msgHash = hash.hashMulticall(
 const { callArray, calldata } = transformCallsToMulticallArrays(calls);
 
 // sign tx to transfer 10 tokens
-const signature = ec.sign(keyPair, msgHash);
+const signature = ec.sign(starkKeyPair, msgHash);
 
 // Execute tx transfer of 10 tokens
 console.log(`Invoke Tx - Transfer 10 tokens back to erc20 contract...`);
