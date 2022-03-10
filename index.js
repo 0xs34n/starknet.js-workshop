@@ -10,6 +10,7 @@ import {
   json,
   number,
   stark,
+  transaction,
 } from "starknet";
 const { compileCalldata } = stark;
 
@@ -127,7 +128,8 @@ const msgHash = hash.hashMulticall(
   "0"
 );
 
-const { callArray, calldata } = transformCallsToMulticallArrays(calls);
+const { callArray, calldata } =
+  transaction.transformCallsToMulticallArrays(calls);
 
 // sign tx to transfer 10 tokens
 const signature = ec.sign(keyPair, msgHash);
