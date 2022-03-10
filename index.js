@@ -11,7 +11,7 @@ import {
   number,
   stark,
 } from "starknet";
-import { transformCallsToMulticallArrays } from "./node_modules/starknet/utils/transaction";
+import { transformCallsToMulticallArrays } from "./node_modules/starknet/utils/transaction.js";
 
 // TODO: Change to OZ account contract
 console.log("Reading Argent Account Contract...");
