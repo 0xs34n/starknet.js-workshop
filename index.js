@@ -10,9 +10,8 @@ import {
   json,
   number,
   stark,
-  transaction,
 } from "starknet";
-const { compileCalldata } = stark;
+import { transformCallsToMulticallArrays } from "./node_modules/starknet/utils/transaction";
 
 // TODO: Change to OZ account contract
 console.log("Reading Argent Account Contract...");
@@ -128,8 +127,7 @@ const msgHash = hash.hashMulticall(
   "0"
 );
 
-const { callArray, calldata } =
-  transaction.transformCallsToMulticallArrays(calls);
+const { callArray, calldata } = transformCallsToMulticallArrays(calls);
 
 // sign tx to transfer 10 tokens
 const signature = ec.sign(keyPair, msgHash);
