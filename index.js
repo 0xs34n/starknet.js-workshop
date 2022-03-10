@@ -104,7 +104,7 @@ const msgHash = encode.addHexPrefix(
   hash.hashMessage(
     wallet.connectedTo,
     erc20Address,
-    stark.getSelectorFromName("transfer"),
+    hash.getSelectorFromName("transfer"),
     [erc20Address, "10"],
     nonce.toString()
   )
@@ -118,7 +118,7 @@ const { transaction_hash: transferTxHash } = await wallet.invoke(
   "execute",
   {
     to: erc20Address,
-    selector: stark.getSelectorFromName("transfer"),
+    selector: hash.getSelectorFromName("transfer"),
     calldata: [erc20Address, "10"],
     nonce: nonce.toString(),
   },
