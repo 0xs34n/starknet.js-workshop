@@ -32,7 +32,7 @@ const compiledErc20 = json.parse(
 
 // Generate public and private key pair.
 const starkKeyPair = ec.genKeyPair();
-const starkKeyPub = ec.getStarkKey(keyPair);
+const starkKeyPub = ec.getStarkKey(starkKeyPair);
 
 // Deploy the Account contract and wait for it to be verified on StarkNet.
 console.log("Deployment Tx - Account Contract to StarkNet...");
