@@ -104,7 +104,7 @@ const balanceBeforeTransfer = await erc20.call("balance_of", {
 
 console.log(
   `accountContract Address ${accountContract.connectedTo} has a balance of:`,
-  JSON.stringify(balanceBeforeTransfer)
+  number.toBN(balanceBeforeTransfer.res, 16).toString()
 );
 
 // Get the nonce of the account and prepare transfer tx
@@ -153,5 +153,5 @@ const balanceAfterTransfer = await erc20.call("balance_of", {
 
 console.log(
   `accountContract Address ${accountContract.connectedTo} has a balance of:`,
-  JSON.stringify(balanceAfterTransfer)
+  number.toBN(balanceAfterTransfer.res, 16).toString()
 );
