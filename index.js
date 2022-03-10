@@ -97,8 +97,7 @@ const { transaction_hash: mintTxHash } = await erc20.invoke("mint", {
 console.log(`Waiting for Tx to be Accepted on Starknet - Minting...`);
 await defaultProvider.waitForTransaction(mintTxHash);
 
-console.log(`Wait 5 seconds for starknet...`);
-await new Promise((resolve) => setTimeout(resolve, 5000)); // 3 sec
+const readNonce = await accountContract.call("get_nonce").nonce;
 
 // Check balance - should be 1000
 console.log(`Calling StarkNet for accountContract balance...`);
@@ -127,6 +126,9 @@ const msgHash = hash.hashMulticall(
   nonce,
   "0"
 );
+
+const { callArray, calldata } = transformCallsToMulticallArrays(calls);
+
 // sign tx to transfer 10 tokens
 const signature = ec.sign(keyPair, msgHash);
 
