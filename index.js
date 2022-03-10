@@ -139,7 +139,7 @@ const { transaction_hash: transferTxHash } = await accountContract.invoke(
     nonce,
   },
   signature
-).transaction_hash;
+);
 
 // Wait for the invoke transaction to be accepted on StarkNet
 console.log(`Waiting for Tx to be Accepted on Starknet - Transfer...`);
