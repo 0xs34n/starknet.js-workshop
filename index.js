@@ -97,6 +97,9 @@ const { transaction_hash: mintTxHash } = await erc20.invoke("mint", {
 console.log(`Waiting for Tx to be Accepted on Starknet - Minting...`);
 await defaultProvider.waitForTransaction(mintTxHash);
 
+console.log(`Wait 5 seconds for starknet...`);
+await new Promise((resolve) => setTimeout(resolve, 5000)); // 3 sec
+
 // Check balance - should be 1000
 console.log(`Calling StarkNet for accountContract balance...`);
 const balanceBeforeTransfer = await erc20.call("balance_of", {
