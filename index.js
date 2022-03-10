@@ -134,7 +134,7 @@ const signature = ec.sign(keyPair, msgHash);
 
 // Execute tx transfer of 10 tokens
 console.log(`Invoke Tx - Transfer 10 tokens back to erc20 contract...`);
-const transferTxHash = await accountContract.invoke(
+const { transaction_hash: transferTxHash } = await accountContract.invoke(
   "__execute__",
   {
     call_array: callArray,
