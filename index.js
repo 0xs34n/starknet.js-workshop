@@ -125,7 +125,7 @@ const msgHash = hash.hashMulticall(
   "0"
 );
 // sign tx to transfer 10 tokens
-const signature = ec.sign(starkKeyPair, msgHash);
+const signature = ec.sign(keyPair, msgHash);
 
 // Execute tx transfer of 10 tokens
 console.log(`Invoke Tx - Transfer 10 tokens back to erc20 contract...`);
