@@ -2,6 +2,8 @@
 
 Install latest version of node and run `npm install` in this directory.
 
+In your own code please run `npm install starknet@next` for the latest version of starknet.js
+
 ## Start the demo:
 
 `node index.js`
