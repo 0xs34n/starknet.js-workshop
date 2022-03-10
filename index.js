@@ -69,14 +69,13 @@ await defaultProvider.waitForTransaction(initializeTxHash);
 
 // Deploy an ERC20 contract and wait for it to be verified on StarkNet.
 console.log("Deployment Tx - ERC20 Contract to StarkNet...");
-const { transaction_hash: erc20TxHash, address: erc20AddressLocal } =
-  await defaultProvider.deployContract({
-    contract: compiledErc20,
-  });
+const erc20Response = await defaultProvider.deployContract({
+  contract: compiledErc20,
+});
 
 // Wait for the deployment transaction to be accepted on StarkNet
 console.log("Waiting for Tx to be Accepted on Starknet - ERC20 Deployment...");
-await defaultProvider.waitForTransaction(erc20TxHash);
+await defaultProvider.waitForTransaction(erc20Response.transaction_hash);
 
 // Get the erc20 contract address
 const erc20Address = erc20Response.address;
