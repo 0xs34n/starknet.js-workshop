@@ -136,7 +136,7 @@ const signature = ec.sign(keyPair, msgHash);
 
 // Execute tx transfer of 10 tokens
 console.log(`Invoke Tx - Transfer 10 tokens back to erc20 contract...`);
-const { code, transaction_hash } = await accountContract.invoke(
+const transferTxHash = await accountContract.invoke(
   "__execute__",
   {
     call_array: callArray,
@@ -144,7 +144,7 @@ const { code, transaction_hash } = await accountContract.invoke(
     nonce,
   },
   signature
-);
+).transaction_hash;
 
 // Wait for the invoke transaction to be accepted on StarkNet
 console.log(`Waiting for Tx to be Accepted on Starknet - Transfer...`);
