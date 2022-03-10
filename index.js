@@ -100,11 +100,11 @@ await defaultProvider.waitForTransaction(mintTxHash);
 console.log(`Calling StarkNet for accountContract balance...`);
 const balanceBeforeTransfer = await erc20.call("balance_of", {
   user: accountContract.connectedTo,
-}).res;
+});
 
 console.log(
   `accountContract Address ${accountContract.connectedTo} has a balance of:`,
-  number.toBN(balanceBeforeTransfer).toString()
+  JSON.stringify(balanceBeforeTransfer)
 );
 
 // Get the nonce of the account and prepare transfer tx
@@ -149,9 +149,9 @@ await defaultProvider.waitForTransaction(transferTxHash);
 console.log(`Calling StarkNet for accountContract balance...`);
 const balanceAfterTransfer = await erc20.call("balance_of", {
   user: accountContract.connectedTo,
-}).res;
+});
 
 console.log(
   `accountContract Address ${accountContract.connectedTo} has a balance of:`,
-  balanceAfterTransfer
+  JSON.stringify(balanceAfterTransfer)
 );
