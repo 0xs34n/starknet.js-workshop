@@ -36,10 +36,7 @@ const starkKeyPub = ec.getStarkKey(keyPair);
 
 // Deploy the Account contract and wait for it to be verified on StarkNet.
 console.log("Deployment Tx - Account Contract to StarkNet...");
-const {
-  transaction_hash: accountTxHash,
-  address: accountContractAddressLocal,
-} = await defaultProvider.deployContract({
+const accountResponse = await defaultProvider.deployContract({
   contract: compiledArgentAccount,
   addressSalt: starkKeyPub,
 });
@@ -48,13 +45,12 @@ const {
 console.log(
   "Waiting for Tx to be Accepted on Starknet - Argent Account Deployment..."
 );
-await defaultProvider.waitForTransaction(accountTxHash);
+await defaultProvider.waitForTransaction(accountResponse.transaction_hash);
 
 // Use your new account address
-const accountContractAddress = accountContractAddressLocal;
 const accountContract = new Contract(
   compiledArgentAccount.abi,
-  accountContractAddress
+  accountResponse.address
 );
 
 // Initialize argent account
@@ -89,9 +85,11 @@ const erc20Address = erc20AddressLocal;
 const erc20 = new Contract(compiledErc20.abi, erc20Address);
 
 // Mint 1000 tokens to accountContract address
-console.log(`Invoke Tx - Minting 1000 tokens to ${accountContractAddress}...`);
+console.log(
+  `Invoke Tx - Minting 1000 tokens to ${accountContract.connectedTo}...`
+);
 const { transaction_hash: mintTxHash } = await erc20.invoke("mint", {
-  recipient: accountContractAddress,
+  recipient: accountContract.connectedTo,
   amount: "1000",
 });
 
@@ -102,25 +100,29 @@ await defaultProvider.waitForTransaction(mintTxHash);
 // Check balance - should be 1000
 console.log(`Calling StarkNet for accountContract balance...`);
 const balanceBeforeTransfer = await erc20.call("balance_of", {
-  user: accountContractAddress,
+  user: accountContract.connectedTo,
 }).res;
 
 console.log(
-  `accountContract Address ${accountContractAddress} has a balance of:`,
+  `accountContract Address ${accountContract.connectedTo} has a balance of:`,
   number.toBN(balanceBeforeTransfer).toString()
 );
 
 // Get the nonce of the account and prepare transfer tx
 console.log(`Calling StarkNet for accountContract nonce...`);
-const { nonce } = await accountContract.call("get_nonce");
-const msgHash = encode.addHexPrefix(
-  hash.hashMessage(
-    accountContract.connectedTo,
-    erc20Address,
-    hash.getSelectorFromName("transfer"),
-    [erc20Address, "10"],
-    nonce.toString()
-  )
+const nonce = (await accountContract.call("get_nonce")).nonce.toString();
+const calls = [
+  {
+    contractAddress: erc20Address,
+    entrypoint: "transfer",
+    calldata: [erc20Address, "10"],
+  },
+];
+const msgHash = hash.hashMulticall(
+  accountContract.connectedTo,
+  calls,
+  nonce,
+  "0"
 );
 // sign tx to transfer 10 tokens
 const signature = ec.sign(starkKeyPair, msgHash);
@@ -145,10 +147,10 @@ await defaultProvider.waitForTransaction(transferTxHash);
 // Check balance after transfer - should be 990
 console.log(`Calling StarkNet for accountContract balance...`);
 const balanceAfterTransfer = await erc20.call("balance_of", {
-  user: accountContractAddress,
+  user: accountContract.connectedTo,
 }).res;
 
 console.log(
-  `accountContract Address ${accountContractAddress} has a balance of:`,
+  `accountContract Address ${accountContract.connectedTo} has a balance of:`,
   balanceAfterTransfer
 );
