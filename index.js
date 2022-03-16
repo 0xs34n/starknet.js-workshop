@@ -55,12 +55,9 @@ const accountContract = new Contract(
 
 // Initialize argent account
 console.log("Invoke Tx - Initialize Argnet Account...");
-const { transaction_hash: initializeTxHash } = await accountContract.invoke(
-  "initialize",
-  {
-    signer: starkKeyPub,
-    guardian: "0",
-  }
+const { transaction_hash: initializeTxHash } = await accountContract.initialize(
+  starkKeyPub,
+  "0"
 );
 console.log(
   "Waiting for Tx to be Accepted on Starknet - Initialize Argent Account..."
@@ -84,13 +81,11 @@ const erc20Address = erc20Response.address;
 const erc20 = new Contract(compiledErc20.abi, erc20Address);
 
 // Mint 1000 tokens to accountContract address
-console.log(
-  `Invoke Tx - Minting 1000 tokens to ${accountContract.connectedTo}...`
+console.log(`Invoke Tx - Minting 1000 tokens to ${accountContract.address}...`);
+const { transaction_hash: mintTxHash } = await erc20.mint(
+  accountContract.address,
+  "1000"
 );
-const { transaction_hash: mintTxHash } = await erc20.invoke("mint", {
-  recipient: accountContract.connectedTo,
-  amount: "1000",
-});
 
 // Wait for the invoke transaction to be accepted on StarkNet
 console.log(`Waiting for Tx to be Accepted on Starknet - Minting...`);
@@ -98,12 +93,10 @@ await defaultProvider.waitForTransaction(mintTxHash);
 
 // Check balance - should be 1000
 console.log(`Calling StarkNet for accountContract balance...`);
-const balanceBeforeTransfer = await erc20.call("balance_of", {
-  user: accountContract.connectedTo,
-});
+const balanceBeforeTransfer = await erc20.balance_of(accountContract.address);
 
 console.log(
-  `accountContract Address ${accountContract.connectedTo} has a balance of:`,
+  `accountContract Address ${accountContract.address} has a balance of:`,
   number.toBN(balanceBeforeTransfer.res, 16).toString()
 );
 
@@ -117,12 +110,7 @@ const calls = [
     calldata: [erc20Address, "10"],
   },
 ];
-const msgHash = hash.hashMulticall(
-  accountContract.connectedTo,
-  calls,
-  nonce,
-  "0"
-);
+const msgHash = hash.hashMulticall(accountContract.address, calls, nonce, "0");
 
 const { callArray, calldata } = transformCallsToMulticallArrays(calls);
 
@@ -131,13 +119,10 @@ const signature = ec.sign(starkKeyPair, msgHash);
 
 // Execute tx transfer of 10 tokens
 console.log(`Invoke Tx - Transfer 10 tokens back to erc20 contract...`);
-const { transaction_hash: transferTxHash } = await accountContract.invoke(
-  "__execute__",
-  {
-    call_array: callArray,
-    calldata,
-    nonce,
-  },
+const { transaction_hash: transferTxHash } = await accountContract.__execute__(
+  callArray,
+  calldata,
+  nonce,
   signature
 );
 
@@ -147,11 +132,9 @@ await defaultProvider.waitForTransaction(transferTxHash);
 
 // Check balance after transfer - should be 990
 console.log(`Calling StarkNet for accountContract balance...`);
-const balanceAfterTransfer = await erc20.call("balance_of", {
-  user: accountContract.connectedTo,
-});
+const balanceAfterTransfer = await erc20.balance_of(accountContract.address);
 
 console.log(
-  `accountContract Address ${accountContract.connectedTo} has a balance of:`,
+  `accountContract Address ${accountContract.address} has a balance of:`,
   number.toBN(balanceAfterTransfer.res, 16).toString()
 );
