@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "starknet": "^3.5.1"
+    "starknet": "^3.10.1"
   },
   "type": "module"
 }

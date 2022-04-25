@@ -3,6 +3,7 @@ import fs from "fs";
 // Install the latest version of starknet with npm install starknet@next and import starknet
 import {
   Contract,
+  Account,
   defaultProvider,
   ec,
   encode,
@@ -26,12 +27,14 @@ const compiledErc20 = json.parse(
 // Since there are no Externally Owned Accounts (EOA) in StarkNet,
 // all Accounts in StarkNet are contracts.
 
-// Unlike in Ethereum where a accountContract is created with a public and private key pair,
+// Unlike in Ethereum where a account is created with a public and private key pair,
 // StarkNet Accounts are the only way to sign transactions and messages, and verify signatures.
 // Therefore a Account - Contract interface is needed.
 
 // Generate public and private key pair.
-const starkKeyPair = ec.genKeyPair();
+const privateKey = stark.randomAddress();
+
+const starkKeyPair = ec.genKeyPair(privateKey);
 const starkKeyPub = ec.getStarkKey(starkKeyPair);
 
 // Deploy the Account contract and wait for it to be verified on StarkNet.
@@ -47,7 +50,6 @@ console.log(
 );
 await defaultProvider.waitForTransaction(accountResponse.transaction_hash);
 
-// Use your new account address
 const accountContract = new Contract(
   compiledArgentAccount.abi,
   accountResponse.address
@@ -55,14 +57,18 @@ const accountContract = new Contract(
 
 // Initialize argent account
 console.log("Invoke Tx - Initialize Argnet Account...");
-const { transaction_hash: initializeTxHash } = await accountContract.initialize(
-  starkKeyPub,
-  "0"
-);
+const initializeResponse = await accountContract.initialize(starkKeyPub, "0");
 console.log(
-  "Waiting for Tx to be Accepted on Starknet - Initialize Argent Account..."
+  "Waiting for Tx to be Accepted on Starknet - Initialize Account..."
 );
-await defaultProvider.waitForTransaction(initializeTxHash);
+await defaultProvider.waitForTransaction(initializeResponse.transaction_hash);
+
+// Use your new account address
+const account = new Account(
+  defaultProvider,
+  accountResponse.address,
+  starkKeyPair
+);
 
 // Deploy an ERC20 contract and wait for it to be verified on StarkNet.
 console.log("Deployment Tx - ERC20 Contract to StarkNet...");
@@ -80,10 +86,10 @@ const erc20Address = erc20Response.address;
 // Create a new erc20 contract object
 const erc20 = new Contract(compiledErc20.abi, erc20Address);
 
-// Mint 1000 tokens to accountContract address
-console.log(`Invoke Tx - Minting 1000 tokens to ${accountContract.address}...`);
+// Mint 1000 tokens to account address
+console.log(`Invoke Tx - Minting 1000 tokens to ${account.address}...`);
 const { transaction_hash: mintTxHash } = await erc20.mint(
-  accountContract.address,
+  account.address,
   "1000"
 );
 
@@ -92,38 +98,24 @@ console.log(`Waiting for Tx to be Accepted on Starknet - Minting...`);
 await defaultProvider.waitForTransaction(mintTxHash);
 
 // Check balance - should be 1000
-console.log(`Calling StarkNet for accountContract balance...`);
-const balanceBeforeTransfer = await erc20.balance_of(accountContract.address);
+console.log(`Calling StarkNet for account balance...`);
+const balanceBeforeTransfer = await erc20.balance_of(account.address);
 
 console.log(
-  `accountContract Address ${accountContract.address} has a balance of:`,
+  `account Address ${account.address} has a balance of:`,
   number.toBN(balanceBeforeTransfer.res, 16).toString()
 );
 
-// Get the nonce of the account and prepare transfer tx
-console.log(`Calling StarkNet for accountContract nonce...`);
-const nonce = (await accountContract.call("get_nonce")).nonce.toString();
-const calls = [
+// Execute tx transfer of 10 tokens
+console.log(`Invoke Tx - Transfer 10 tokens back to erc20 contract...`);
+const { code, transaction_hash: transferTxHash } = await account.execute(
   {
     contractAddress: erc20Address,
     entrypoint: "transfer",
     calldata: [erc20Address, "10"],
   },
-];
-const msgHash = hash.hashMulticall(accountContract.address, calls, nonce, "0");
-
-const { callArray, calldata } = transformCallsToMulticallArrays(calls);
-
-// sign tx to transfer 10 tokens
-const signature = ec.sign(starkKeyPair, msgHash);
-
-// Execute tx transfer of 10 tokens
-console.log(`Invoke Tx - Transfer 10 tokens back to erc20 contract...`);
-const { transaction_hash: transferTxHash } = await accountContract.__execute__(
-  callArray,
-  calldata,
-  nonce,
-  signature
+  undefined,
+  { maxFee: "0" }
 );
 
 // Wait for the invoke transaction to be accepted on StarkNet
@@ -131,10 +123,10 @@ console.log(`Waiting for Tx to be Accepted on Starknet - Transfer...`);
 await defaultProvider.waitForTransaction(transferTxHash);
 
 // Check balance after transfer - should be 990
-console.log(`Calling StarkNet for accountContract balance...`);
-const balanceAfterTransfer = await erc20.balance_of(accountContract.address);
+console.log(`Calling StarkNet for account balance...`);
+const balanceAfterTransfer = await erc20.balance_of(account.address);
 
 console.log(
-  `accountContract Address ${accountContract.address} has a balance of:`,
+  `account Address ${account.address} has a balance of:`,
   number.toBN(balanceAfterTransfer.res, 16).toString()
 );
