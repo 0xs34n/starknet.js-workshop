@@ -11,8 +11,13 @@ import {
   json,
   number,
   stark,
+  Provider,
 } from "starknet";
 import { transformCallsToMulticallArrays } from "./node_modules/starknet/utils/transaction.js";
+
+const provider = process.env.STARKNET_PROVIDER_BASE_URL === undefined ?
+  defaultProvider :
+  new Provider({ baseUrl: process.env.STARKNET_PROVIDER_BASE_URL });
 
 // TODO: Change to OZ account contract
 console.log("Reading Argent Account Contract...");
@@ -39,7 +44,7 @@ const starkKeyPub = ec.getStarkKey(starkKeyPair);
 
 // Deploy the Account contract and wait for it to be verified on StarkNet.
 console.log("Deployment Tx - Account Contract to StarkNet...");
-const accountResponse = await defaultProvider.deployContract({
+const accountResponse = await provider.deployContract({
   contract: compiledArgentAccount,
   addressSalt: starkKeyPub,
 });
@@ -48,11 +53,12 @@ const accountResponse = await defaultProvider.deployContract({
 console.log(
   "Waiting for Tx to be Accepted on Starknet - Argent Account Deployment..."
 );
-await defaultProvider.waitForTransaction(accountResponse.transaction_hash);
+await provider.waitForTransaction(accountResponse.transaction_hash);
 
 const accountContract = new Contract(
   compiledArgentAccount.abi,
-  accountResponse.address
+  accountResponse.address,
+  provider
 );
 
 // Initialize argent account
@@ -61,30 +67,30 @@ const initializeResponse = await accountContract.initialize(starkKeyPub, "0");
 console.log(
   "Waiting for Tx to be Accepted on Starknet - Initialize Account..."
 );
-await defaultProvider.waitForTransaction(initializeResponse.transaction_hash);
+await provider.waitForTransaction(initializeResponse.transaction_hash);
 
 // Use your new account address
 const account = new Account(
-  defaultProvider,
+  provider,
   accountResponse.address,
   starkKeyPair
 );
 
 // Deploy an ERC20 contract and wait for it to be verified on StarkNet.
 console.log("Deployment Tx - ERC20 Contract to StarkNet...");
-const erc20Response = await defaultProvider.deployContract({
+const erc20Response = await provider.deployContract({
   contract: compiledErc20,
 });
 
 // Wait for the deployment transaction to be accepted on StarkNet
 console.log("Waiting for Tx to be Accepted on Starknet - ERC20 Deployment...");
-await defaultProvider.waitForTransaction(erc20Response.transaction_hash);
+await provider.waitForTransaction(erc20Response.transaction_hash);
 
 // Get the erc20 contract address
 const erc20Address = erc20Response.address;
 
 // Create a new erc20 contract object
-const erc20 = new Contract(compiledErc20.abi, erc20Address);
+const erc20 = new Contract(compiledErc20.abi, erc20Address, provider);
 
 // Mint 1000 tokens to account address
 console.log(`Invoke Tx - Minting 1000 tokens to ${account.address}...`);
@@ -95,7 +101,7 @@ const { transaction_hash: mintTxHash } = await erc20.mint(
 
 // Wait for the invoke transaction to be accepted on StarkNet
 console.log(`Waiting for Tx to be Accepted on Starknet - Minting...`);
-await defaultProvider.waitForTransaction(mintTxHash);
+await provider.waitForTransaction(mintTxHash);
 
 // Check balance - should be 1000
 console.log(`Calling StarkNet for account balance...`);
@@ -120,7 +126,7 @@ const { code, transaction_hash: transferTxHash } = await account.execute(
 
 // Wait for the invoke transaction to be accepted on StarkNet
 console.log(`Waiting for Tx to be Accepted on Starknet - Transfer...`);
-await defaultProvider.waitForTransaction(transferTxHash);
+await provider.waitForTransaction(transferTxHash);
 
 // Check balance after transfer - should be 990
 console.log(`Calling StarkNet for account balance...`);
