@@ -10,6 +10,6 @@ In your own code please run `npm install starknet@next` for the latest version o
 
 ## Questions?
 
-Ask in #starknet-js channel in the [StarkNet Discord ](discord.gg/uJ9HZTUk2Y)
+Ask in #starknet-js channel in the [StarkNet Discord](https://discord.gg/uJ9HZTUk2Y)
 
 DMs - 0xSean#1534 on Discord
